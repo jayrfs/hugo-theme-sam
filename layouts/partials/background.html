@@ -1,0 +1,138 @@
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        position: relative;
+    }
+    
+    .overlay-media {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -1;
+    }
+    
+    .controls {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        z-index: 1;
+    }
+
+    .control-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        z-index: 1;
+    }
+</style>
+
+<div class="controls">
+    <button id="past" class="control-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left-circle">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 8 8 12 12 16"></polyline>
+            <line x1="16" y1="12" x2="8" y2="12"></line>
+        </svg>
+    </button>
+    <button id="now" class="control-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather feather-smile">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+            <line x1="9" y1="9" x2="9.01" y2="9"></line>
+            <line x1="15" y1="9" x2="15.01" y2="9"></line>
+        </svg>
+    </button>
+    <button id="future" class="control-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right-circle">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 16 16 12 12 8"></polyline>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+    </button>
+</div>
+
+<script>
+    var currentDate = new Date();
+    
+    function formatDateToISO(date) {
+        var year = date.getFullYear();
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        
+        return year + "-" + month + "-" + day;
+    }
+    
+    function setOverlayMedia(date) {
+        var isoDate = formatDateToISO(date);
+        var mediaExtensions = ["webp", "jpg", "jpeg", "png", "gif", "mp4"];
+        
+        for (var i = 0; i < mediaExtensions.length; i++) {
+            var mediaSource = "bg_media/" + isoDate + "." + mediaExtensions[i];
+            
+            var xhr = new XMLHttpRequest();
+            xhr.open("HEAD", mediaSource, false);
+            xhr.send();
+            
+            if (xhr.status !== 404) {
+                var mediaElement;
+                
+                if (mediaExtensions[i] === "mp4") {
+                    mediaElement = document.createElement("video");
+                    mediaElement.autoplay = true;
+                    mediaElement.loop = true;
+                    mediaElement.muted = true;
+                    mediaElement.style.objectFit = "cover";
+                } else {
+                    mediaElement = document.createElement("img");
+                }
+                
+                mediaElement.src = mediaSource;
+                mediaElement.classList.add("overlay-media");
+                document.body.appendChild(mediaElement);
+            }
+        }
+    }
+    
+    function updateOverlayMedia(date) {
+        // Remove existing overlay media
+        var overlayMedia = document.getElementsByClassName("overlay-media");
+        while (overlayMedia.length > 0) {
+            overlayMedia[0].parentNode.removeChild(overlayMedia[0]);
+        }
+        
+        setOverlayMedia(date);
+    }
+    
+    function handlePastButtonClick() {
+        currentDate.setDate(currentDate.getDate() - 1);
+        updateOverlayMedia(currentDate);
+    }
+    
+    function handleNowButtonClick() {
+        currentDate = new Date();
+        updateOverlayMedia(currentDate);
+    }
+    
+    function handleFutureButtonClick() {
+        currentDate.setDate(currentDate.getDate() + 1);
+        updateOverlayMedia(currentDate);
+    }
+    
+    document.getElementById("past").addEventListener("click", handlePastButtonClick);
+    document.getElementById("now").addEventListener("click", handleNowButtonClick);
+    document.getElementById("future").addEventListener("click", handleFutureButtonClick);
+    
+    setOverlayMedia(currentDate); // Set the initial overlay media
+    
+    setInterval(function() {
+        updateOverlayMedia(currentDate); // Check and update the overlay media every minute
+    }, 60000);
+</script>
